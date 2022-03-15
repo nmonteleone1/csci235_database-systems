@@ -1,0 +1,173 @@
+SQL> SET ECHO ON
+SQL> SET FEEDBACK ON
+SQL> SET LINESIZE 100
+SQL> SET PAGESIZE 200
+SQL> SET SERVEROUTPUT ON
+SQL> 
+SQL> /* (1) First the script, adds a column to a relational table SUPPLIER that contains information about trusted suppliers.             */
+SQL> 
+SQL> ALTER TABLE SUPPLIER
+  2  ADD TRUST VARCHAR(9) DEFAULT 'UNTRUSTED';
+
+Table SUPPLIER altered.
+
+SQL> 
+SQL> /* (2) Next, the script updates a relational table SUPPLIER to make at least one supplier trusted.                                   */
+SQL> 
+SQL> UPDATE SUPPLIER
+  2  SET TRUST = CASE 
+  3                  WHEN COMPANY_NAME = 'Exotic Liquids' THEN 'TRUSTED'
+  4                  ELSE 'UNTRUSTED'
+  5              END
+  6  ;
+
+29 rows updated.
+
+SQL> 
+SQL> /* (3) Next, the script creates a row trigger, that automatically verifies if information about a new product to be inserted into 
+SQL>       a sample database is supplied by a trusted supplier. If a supplier is not trusted, then the insertion must fail and an error 
+SQL>       message must be displayed. In this particular case it is the "good error" that DOES NOT cause deduction of any marks ï?Š.  
+SQL>       If a supplier is trusted, then the trigger allows for insertion of information about a new product and no message is 
+SQL>       displayed.                                                                                                                    */
+SQL> 
+SQL> CREATE OR REPLACE TRIGGER CheckSupplier BEFORE INSERT ON PRODUCT FOR EACH ROW
+  2  DECLARE
+  3      trustStatus SUPPLIER.TRUST%type;
+  4  BEGIN  
+  5      SELECT TRUST
+  6      INTO trustStatus
+  7      FROM SUPPLIER
+  8      WHERE SUPPLIER.COMPANY_NAME = :NEW.SUPPLIER_NAME;
+  9  
+ 10      IF trustStatus != 'TRUSTED' THEN
+ 11          RAISE_APPLICATION_ERROR(-20002, 'Product supplier "' || :NEW.SUPPLIER_NAME || '" is not a trusted supplier.');
+ 12      END IF;
+ 13  
+ 14  END;
+ 15  /
+
+Trigger CHECKSUPPLIER compiled
+
+SQL> 
+SQL> /* (4) Next, the script comprehensively tests the trigger. A test must include at least one insertion of a of information about 
+SQL>       a new product, that comes from a trusted supplier and one insertion of information about a new product, that comes from not 
+SQL>       trusted supplier. If insertion is successful that the script must list a row inserted into PRODUCT relational table.          */
+SQL> 
+SQL> INSERT INTO PRODUCT (   PRODUCT_NAME, 
+  2                          SUPPLIER_NAME, 
+  3                          CATEGORY_NAME, 
+  4                          QUANTITY_PER_UNIT, 
+  5                          UNIT_PRICE, 
+  6                          UNITS_IN_STOCK, 
+  7                          UNITS_ON_ORDER, 
+  8                          REORDER_LEVEL, 
+  9                          DISCONTINUED
+ 10  )
+ 11  VALUES ('Extremely-Hot Hot-Sauce', 
+ 12          'Exotic Liquids', 
+ 13          'Condiments', 
+ 14          '12 boxes', 
+ 15          13, 
+ 16          32, 
+ 17          0, 
+ 18          15, 
+ 19          'N'
+ 20  );
+
+1 row inserted.
+
+SQL> 
+SQL> SELECT COMPANY_NAME, TRUST
+  2  FROM SUPPLIER;
+
+COMPANY_NAME                             TRUST    
+---------------------------------------- ---------
+Exotic Liquids                           TRUSTED  
+New Orleans Cajun Delights               UNTRUSTED
+Grandma Kelly's Homestead                UNTRUSTED
+Tokyo Traders                            UNTRUSTED
+Cooperativa de Quesos 'Las Cabras'       UNTRUSTED
+Mayumi's                                 UNTRUSTED
+Pavlova, Ltd.                            UNTRUSTED
+Specialty Biscuits, Ltd.                 UNTRUSTED
+PB Knackebrod AB                         UNTRUSTED
+Refrescos Americanas LTDA                UNTRUSTED
+Heli Susswaren GmbH And Co. KG           UNTRUSTED
+Plutzer Lebensmittelgrossmarkte AG       UNTRUSTED
+Nord-Ost-Fisch Handelsgesellschaft mbH   UNTRUSTED
+Formaggi Fortini s.r.l.                  UNTRUSTED
+Norske Meierier                          UNTRUSTED
+Bigfoot Breweries                        UNTRUSTED
+Svensk Sjofoda AB                        UNTRUSTED
+Aux joyeux ecclesiastiques               UNTRUSTED
+New England Seafood Cannery              UNTRUSTED
+Leka Trading                             UNTRUSTED
+Lyngbysild                               UNTRUSTED
+Zaanse Snoepfabriek                      UNTRUSTED
+Karkki Oy                                UNTRUSTED
+G'day, Mate                              UNTRUSTED
+Ma Maison                                UNTRUSTED
+Pasta Buttini s.r.l.                     UNTRUSTED
+Escargots Nouveaux                       UNTRUSTED
+Gai paturage                             UNTRUSTED
+Forets d'erables                         UNTRUSTED
+
+29 rows selected. 
+
+SQL> 
+SQL> INSERT INTO PRODUCT (   PRODUCT_NAME, 
+  2                          SUPPLIER_NAME, 
+  3                          CATEGORY_NAME, 
+  4                          QUANTITY_PER_UNIT, 
+  5                          UNIT_PRICE, 
+  6                          UNITS_IN_STOCK, 
+  7                          UNITS_ON_ORDER, 
+  8                          REORDER_LEVEL, 
+  9                          DISCONTINUED
+ 10  )
+ 11  VALUES ('Parmesan of Moderna', 
+ 12          'Formaggi Fortini s.r.l.', 
+ 13          'Diary Products', 
+ 14          '100g pkg', 
+ 15          45, 
+ 16          16, 
+ 17          0, 
+ 18          4, 
+ 19          'N'
+ 20  );
+
+Error starting at line : 76 in command -
+INSERT INTO PRODUCT (   PRODUCT_NAME, 
+                        SUPPLIER_NAME, 
+                        CATEGORY_NAME, 
+                        QUANTITY_PER_UNIT, 
+                        UNIT_PRICE, 
+                        UNITS_IN_STOCK, 
+                        UNITS_ON_ORDER, 
+                        REORDER_LEVEL, 
+                        DISCONTINUED
+)
+VALUES ('Parmesan of Moderna', 
+        'Formaggi Fortini s.r.l.', 
+        'Diary Products', 
+        '100g pkg', 
+        45, 
+        16, 
+        0, 
+        4, 
+        'N'
+)
+Error report -
+ORA-20002: Product supplier "Formaggi Fortini s.r.l." is not a trusted supplier.
+ORA-06512: at "NM824.CHECKSUPPLIER", line 10
+ORA-04088: error during execution of trigger 'NM824.CHECKSUPPLIER'
+
+SQL> 
+SQL> /* (5) Finally, the script removes from a data dictionary a trigger created in a step (3).                                           */
+SQL> 
+SQL> DROP TRIGGER CheckSupplier;
+
+Trigger CHECKSUPPLIER dropped.
+
+SQL> 
+SQL> SPOOL OFF

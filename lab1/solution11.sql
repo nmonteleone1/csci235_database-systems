@@ -1,0 +1,17 @@
+spool solution11
+
+set echo on
+set feedback on
+set linesize 100
+set pagesize 200
+
+ALTER TABLE PRODUCT
+	ADD TIMES_ORDERED NUMBER(9) DEFAULT 0;
+
+UPDATE PRODUCT
+	SET TIMES_ORDERED = (
+			SELECT COUNT(*) FROM ORDER_DETAIL
+				WHERE ORDER_DETAIL.PRODUCT_NAME = PRODUCT.PRODUCT_NAME
+		);
+
+spool off

@@ -1,0 +1,458 @@
+SQL> SET ECHO ON
+SQL> SET FEEDBACK ON
+SQL> SET LINESIZE 300
+SQL> SET PAGESIZE 5000
+SQL> 
+SQL> ----(1)----
+SQL> EXPLAIN PLAN FOR
+  2      SELECT product_name
+  3      FROM ORDER_DETAIL
+  4      ORDER BY unit_price, discount
+  5  ;
+
+Explained.
+
+SQL> 
+SQL> SELECT *
+  2  FROM TABLE(DBMS_XPLAN.DISPLAY)
+  3  ;
+
+PLAN_TABLE_OUTPUT                                                                                                                                                                                                                                                                                           
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 205837434
+ 
+-----------------------------------------------------------------------------------
+| Id  | Operation          | Name         | Rows  | Bytes | Cost (%CPU)| Time     |
+-----------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT   |              |   327 | 15696 |     4  (25)| 00:00:01 |
+|   1 |  SORT ORDER BY     |              |   327 | 15696 |     4  (25)| 00:00:01 |
+|   2 |   TABLE ACCESS FULL| ORDER_DETAIL |   327 | 15696 |     3   (0)| 00:00:01 |
+-----------------------------------------------------------------------------------
+ 
+Note
+-----
+   - dynamic statistics used: dynamic sampling (level=2)
+
+13 rows selected. 
+
+SQL> 
+SQL> CREATE INDEX curr_index
+  2  ON ORDER_DETAIL(product_name, unit_price, discount)
+  3  ;
+
+Index CURR_INDEX created.
+
+SQL> 
+SQL> EXPLAIN PLAN FOR
+  2      SELECT product_name
+  3      FROM ORDER_DETAIL
+  4      ORDER BY unit_price, discount
+  5  ;
+
+Explained.
+
+SQL> 
+SQL> SELECT *
+  2  FROM TABLE(DBMS_XPLAN.DISPLAY)
+  3  ;
+
+PLAN_TABLE_OUTPUT                                                                                                                                                                                                                                                                                           
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 4062461147
+ 
+------------------------------------------------------------------------------------
+| Id  | Operation             | Name       | Rows  | Bytes | Cost (%CPU)| Time     |
+------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT      |            |   327 | 15696 |     4  (25)| 00:00:01 |
+|   1 |  SORT ORDER BY        |            |   327 | 15696 |     4  (25)| 00:00:01 |
+|   2 |   INDEX FAST FULL SCAN| CURR_INDEX |   327 | 15696 |     3   (0)| 00:00:01 |
+------------------------------------------------------------------------------------
+ 
+Note
+-----
+   - dynamic statistics used: dynamic sampling (level=2)
+
+13 rows selected. 
+
+SQL> 
+SQL> DROP INDEX curr_index
+  2  ;
+
+Index CURR_INDEX dropped.
+
+SQL> 
+SQL> ----(2)----
+SQL> EXPLAIN PLAN FOR
+  2      SELECT product_name, supplier_name
+  3      FROM PRODUCT
+  4      WHERE category_name IN ('Beverages','Condiments','Produce')
+  5  ;
+
+Explained.
+
+SQL> 
+SQL> SELECT *
+  2  FROM TABLE(DBMS_XPLAN.DISPLAY)
+  3  ;
+
+PLAN_TABLE_OUTPUT                                                                                                                                                                                                                                                                                           
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 427209646
+ 
+-----------------------------------------------------------------------------
+| Id  | Operation         | Name    | Rows  | Bytes | Cost (%CPU)| Time     |
+-----------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |         |    29 |  1769 |     3   (0)| 00:00:01 |
+|*  1 |  TABLE ACCESS FULL| PRODUCT |    29 |  1769 |     3   (0)| 00:00:01 |
+-----------------------------------------------------------------------------
+ 
+Predicate Information (identified by operation id):
+---------------------------------------------------
+ 
+   1 - filter("CATEGORY_NAME"='Beverages' OR 
+              "CATEGORY_NAME"='Condiments' OR "CATEGORY_NAME"='Produce')
+ 
+Note
+-----
+   - dynamic statistics used: dynamic sampling (level=2)
+
+18 rows selected. 
+
+SQL> 
+SQL> CREATE INDEX curr_index
+  2  ON PRODUCT(product_name, supplier_name, category_name)
+  3  ;
+
+Index CURR_INDEX created.
+
+SQL> 
+SQL> EXPLAIN PLAN FOR
+  2      SELECT product_name, supplier_name
+  3      FROM PRODUCT
+  4      WHERE category_name IN ('Beverages','Condiments','Produce')
+  5  ;
+
+Explained.
+
+SQL> 
+SQL> SELECT *
+  2  FROM TABLE(DBMS_XPLAN.DISPLAY)
+  3  ;
+
+PLAN_TABLE_OUTPUT                                                                                                                                                                                                                                                                                           
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 3571584864
+ 
+-------------------------------------------------------------------------------
+| Id  | Operation        | Name       | Rows  | Bytes | Cost (%CPU)| Time     |
+-------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT |            |    29 |  1769 |     1   (0)| 00:00:01 |
+|*  1 |  INDEX FULL SCAN | CURR_INDEX |    29 |  1769 |     1   (0)| 00:00:01 |
+-------------------------------------------------------------------------------
+ 
+Predicate Information (identified by operation id):
+---------------------------------------------------
+ 
+   1 - filter("CATEGORY_NAME"='Beverages' OR 
+              "CATEGORY_NAME"='Condiments' OR "CATEGORY_NAME"='Produce')
+ 
+Note
+-----
+   - dynamic statistics used: dynamic sampling (level=2)
+
+18 rows selected. 
+
+SQL> 
+SQL> DROP INDEX curr_index
+  2  ;
+
+Index CURR_INDEX dropped.
+
+SQL> 
+SQL> ----(3)----
+SQL> EXPLAIN PLAN FOR
+  2      SELECT company_name, contact_name
+  3      FROM CUSTOMER
+  4      WHERE (city= 'Marseille' or city='Madrid') AND (country = 'France' OR country = 'Spain')
+  5  ;
+
+Explained.
+
+SQL> 
+SQL> SELECT *
+  2  FROM TABLE(DBMS_XPLAN.DISPLAY)
+  3  ;
+
+PLAN_TABLE_OUTPUT                                                                                                                                                                                                                                                                                           
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 2844954298
+ 
+------------------------------------------------------------------------------
+| Id  | Operation         | Name     | Rows  | Bytes | Cost (%CPU)| Time     |
+------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |          |     4 |   228 |     3   (0)| 00:00:01 |
+|*  1 |  TABLE ACCESS FULL| CUSTOMER |     4 |   228 |     3   (0)| 00:00:01 |
+------------------------------------------------------------------------------
+ 
+Predicate Information (identified by operation id):
+---------------------------------------------------
+ 
+   1 - filter(("CITY"='Madrid' OR "CITY"='Marseille') AND 
+              ("COUNTRY"='France' OR "COUNTRY"='Spain'))
+ 
+Note
+-----
+   - dynamic statistics used: dynamic sampling (level=2)
+
+18 rows selected. 
+
+SQL> 
+SQL> CREATE INDEX curr_index
+  2  ON CUSTOMER(company_name, contact_name, city, country)
+  3  ;
+
+Index CURR_INDEX created.
+
+SQL> 
+SQL> EXPLAIN PLAN FOR
+  2      SELECT company_name, contact_name
+  3      FROM CUSTOMER
+  4      WHERE (city= 'Marseille' or city='Madrid') AND (country = 'France' OR country = 'Spain')
+  5  ;
+
+Explained.
+
+SQL> 
+SQL> SELECT *
+  2  FROM TABLE(DBMS_XPLAN.DISPLAY)
+  3  ;
+
+PLAN_TABLE_OUTPUT                                                                                                                                                                                                                                                                                           
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 3571584864
+ 
+-------------------------------------------------------------------------------
+| Id  | Operation        | Name       | Rows  | Bytes | Cost (%CPU)| Time     |
+-------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT |            |     4 |   228 |     1   (0)| 00:00:01 |
+|*  1 |  INDEX FULL SCAN | CURR_INDEX |     4 |   228 |     1   (0)| 00:00:01 |
+-------------------------------------------------------------------------------
+ 
+Predicate Information (identified by operation id):
+---------------------------------------------------
+ 
+   1 - filter(("CITY"='Madrid' OR "CITY"='Marseille') AND 
+              ("COUNTRY"='France' OR "COUNTRY"='Spain'))
+ 
+Note
+-----
+   - dynamic statistics used: dynamic sampling (level=2)
+
+18 rows selected. 
+
+SQL> 
+SQL> DROP INDEX curr_index
+  2  ;
+
+Index CURR_INDEX dropped.
+
+SQL> 
+SQL> 
+SQL> ----(4)----
+SQL> EXPLAIN PLAN FOR
+  2      SELECT customer_code
+  3      FROM ORDERS
+  4      WHERE order_date >= '01-JAN-2010'
+  5      MINUS
+  6      SELECT customer_code
+  7      FROM ORDERS
+  8      WHERE ship_city NOT IN ('Rio de Janeiro','Anchorage')
+  9  ;
+
+Explained.
+
+SQL> 
+SQL> SELECT *
+  2  FROM TABLE(DBMS_XPLAN.DISPLAY)
+  3  ;
+
+PLAN_TABLE_OUTPUT                                                                                                                                                                                                                                                                                           
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 3807300493
+ 
+------------------------------------------------------------------------------
+| Id  | Operation           | Name   | Rows  | Bytes | Cost (%CPU)| Time     |
+------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT    |        |     1 |  1599 |     8  (25)| 00:00:01 |
+|   1 |  MINUS              |        |       |       |            |          |
+|   2 |   SORT UNIQUE       |        |     1 |    13 |     4  (25)| 00:00:01 |
+|*  3 |    TABLE ACCESS FULL| ORDERS |     1 |    13 |     3   (0)| 00:00:01 |
+|   4 |   SORT UNIQUE       |        |   122 |  1586 |     4  (25)| 00:00:01 |
+|*  5 |    TABLE ACCESS FULL| ORDERS |   122 |  1586 |     3   (0)| 00:00:01 |
+------------------------------------------------------------------------------
+ 
+Predicate Information (identified by operation id):
+---------------------------------------------------
+ 
+   3 - filter("ORDER_DATE">=TO_DATE(' 2010-01-01 00:00:00', 
+              'syyyy-mm-dd hh24:mi:ss'))
+   5 - filter("SHIP_CITY"<>'Rio de Janeiro' AND 
+              "SHIP_CITY"<>'Anchorage')
+ 
+Note
+-----
+   - dynamic statistics used: dynamic sampling (level=2)
+
+24 rows selected. 
+
+SQL> 
+SQL> CREATE INDEX curr_index
+  2  ON ORDERS(order_date)
+  3  ;
+
+Index CURR_INDEX created.
+
+SQL> 
+SQL> EXPLAIN PLAN FOR
+  2      SELECT customer_code
+  3      FROM ORDERS
+  4      WHERE order_date >= '01-JAN-2010'
+  5      MINUS
+  6      SELECT customer_code
+  7      FROM ORDERS
+  8      WHERE ship_city NOT IN ('Rio de Janeiro','Anchorage')
+  9  ;
+
+Explained.
+
+SQL> 
+SQL> SELECT *
+  2  FROM TABLE(DBMS_XPLAN.DISPLAY)
+  3  ;
+
+PLAN_TABLE_OUTPUT                                                                                                                                                                                                                                                                                           
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 3486213709
+ 
+----------------------------------------------------------------------------------------------------
+| Id  | Operation                             | Name       | Rows  | Bytes | Cost (%CPU)| Time     |
+----------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT                      |            |     1 |  1599 |     5  (40)| 00:00:01 |
+|   1 |  MINUS                                |            |       |       |            |          |
+|   2 |   SORT UNIQUE                         |            |     1 |    13 |     1 (100)| 00:00:01 |
+|   3 |    TABLE ACCESS BY INDEX ROWID BATCHED| ORDERS     |     1 |    13 |     0   (0)| 00:00:01 |
+|*  4 |     INDEX RANGE SCAN                  | CURR_INDEX |     1 |       |     0   (0)| 00:00:01 |
+|   5 |   SORT UNIQUE                         |            |   122 |  1586 |     4  (25)| 00:00:01 |
+|*  6 |    TABLE ACCESS FULL                  | ORDERS     |   122 |  1586 |     3   (0)| 00:00:01 |
+----------------------------------------------------------------------------------------------------
+ 
+Predicate Information (identified by operation id):
+---------------------------------------------------
+ 
+   4 - access("ORDER_DATE">=TO_DATE(' 2010-01-01 00:00:00', 'syyyy-mm-dd hh24:mi:ss'))
+   6 - filter("SHIP_CITY"<>'Rio de Janeiro' AND "SHIP_CITY"<>'Anchorage')
+ 
+Note
+-----
+   - dynamic statistics used: dynamic sampling (level=2)
+
+23 rows selected. 
+
+SQL> 
+SQL> DROP INDEX curr_index
+  2  ;
+
+Index CURR_INDEX dropped.
+
+SQL> 
+SQL> ----(5)----
+SQL> EXPLAIN PLAN FOR
+  2      SELECT city, count(*)
+  3      FROM SUPPLIER
+  4      GROUP BY city
+  5      HAVING count(*) > 3
+  6  ;
+
+Explained.
+
+SQL> 
+SQL> SELECT *
+  2  FROM TABLE(DBMS_XPLAN.DISPLAY)
+  3  ;
+
+PLAN_TABLE_OUTPUT                                                                                                                                                                                                                                                                                           
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 307755741
+ 
+-------------------------------------------------------------------------------
+| Id  | Operation          | Name     | Rows  | Bytes | Cost (%CPU)| Time     |
+-------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT   |          |    29 |   261 |     4  (25)| 00:00:01 |
+|*  1 |  HASH GROUP BY     |          |    29 |   261 |     4  (25)| 00:00:01 |
+|   2 |   TABLE ACCESS FULL| SUPPLIER |    29 |   261 |     3   (0)| 00:00:01 |
+-------------------------------------------------------------------------------
+ 
+Predicate Information (identified by operation id):
+---------------------------------------------------
+ 
+   1 - filter(COUNT(*)>3)
+ 
+Note
+-----
+   - dynamic statistics used: dynamic sampling (level=2)
+
+18 rows selected. 
+
+SQL> 
+SQL> CREATE INDEX curr_index
+  2  ON SUPPLIER(city)
+  3  ;
+
+Index CURR_INDEX created.
+
+SQL> 
+SQL> EXPLAIN PLAN FOR
+  2      SELECT city, count(*)
+  3      FROM SUPPLIER
+  4      GROUP BY city
+  5      HAVING count(*) > 3
+  6  ;
+
+Explained.
+
+SQL> 
+SQL> SELECT *
+  2  FROM TABLE(DBMS_XPLAN.DISPLAY)
+  3  ;
+
+PLAN_TABLE_OUTPUT                                                                                                                                                                                                                                                                                           
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 3550624302
+ 
+-----------------------------------------------------------------------------------
+| Id  | Operation            | Name       | Rows  | Bytes | Cost (%CPU)| Time     |
+-----------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT     |            |    29 |   261 |     1   (0)| 00:00:01 |
+|*  1 |  SORT GROUP BY NOSORT|            |    29 |   261 |     1   (0)| 00:00:01 |
+|   2 |   INDEX FULL SCAN    | CURR_INDEX |    29 |   261 |     1   (0)| 00:00:01 |
+-----------------------------------------------------------------------------------
+ 
+Predicate Information (identified by operation id):
+---------------------------------------------------
+ 
+   1 - filter(COUNT(*)>3)
+ 
+Note
+-----
+   - dynamic statistics used: dynamic sampling (level=2)
+
+18 rows selected. 
+
+SQL> 
+SQL> DROP INDEX curr_index
+  2  ;
+
+Index CURR_INDEX dropped.
+
+SQL> 
+SQL> SPOOL OFF

@@ -1,0 +1,22 @@
+SQL> 
+SQL> set echo on
+SQL> set feedback on
+SQL> set linesize 100
+SQL> set pagesize 200
+SQL> 
+SQL> ALTER TABLE PRODUCT
+  2  	ADD TIMES_ORDERED NUMBER(9) DEFAULT 0;
+
+Table PRODUCT altered.
+
+SQL> 
+SQL> UPDATE PRODUCT
+  2  	SET TIMES_ORDERED = (
+  3  			SELECT COUNT(*) FROM ORDER_DETAIL
+  4  				WHERE ORDER_DETAIL.PRODUCT_NAME = PRODUCT.PRODUCT_NAME
+  5  		);
+
+77 rows updated.
+
+SQL> 
+SQL> spool off

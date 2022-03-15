@@ -1,0 +1,45 @@
+SQL> 
+SQL> set echo on
+SQL> set feedback on
+SQL> set linesize 300
+SQL> set pagesize 100
+SQL> 
+SQL> 
+SQL> DROP TABLE ORDER_DETAIL PURGE;
+
+Table ORDER_DETAIL dropped.
+
+SQL> DROP TABLE ORDERS PURGE;
+
+Table ORDERS dropped.
+
+SQL> DROP TABLE PRODUCT PURGE;
+
+Table PRODUCT dropped.
+
+SQL> DROP TABLE SUPPLIER PURGE;
+
+Table SUPPLIER dropped.
+
+SQL> DROP TABLE CATEGORY PURGE;
+
+Table CATEGORY dropped.
+
+SQL> DROP TABLE CUSTOMER PURGE;
+
+Table CUSTOMER dropped.
+
+SQL> DROP TABLE EMPLOYEE PURGE;
+
+Table EMPLOYEE dropped.
+
+SQL> DROP TABLE SHIPPER PURGE;
+
+Table SHIPPER dropped.
+
+SQL> DROP TABLE COUNTRY_ORDERS PURGE;
+
+Table COUNTRY_ORDERS dropped.
+
+SQL> 
+SQL> spool off

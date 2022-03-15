@@ -1,0 +1,232 @@
+SQL> SET ECHO ON
+SQL> SET FEEDBACK ON
+SQL> SET LINESIZE 200
+SQL> SET PAGESIZE 400
+SQL> SET SERVEROUTPUT ON
+SQL> 
+SQL> /* (1) First, the script creates the additional database structures to record information about the total number of orders submitted per
+SQL>       country and year. For example, a sample database should contain information about the total number of orders submitted by
+SQL>       the customers located in Germany in 1996, next, the total number of orders submitted by the customers located in Germany in 1995, …
+SQL>       next total number if orders submitted by the customers located in France in 1996, next, the total number of orders submitted by
+SQL>       the customers located in France in 1997, … and so on, and so on.                                                                     */
+SQL> 
+SQL> CREATE TABLE COUNTRY_ORDERS
+  2  (
+  3      COUNTRY     VARCHAR(15)     NOT NULL,
+  4      YEAR        VARCHAR(4)      NOT NULL,
+  5      ORDER_COUNT NUMBER(9)       DEFAULT 0,
+  6      
+  7      CONSTRAINT PK_COUNTRY_YEAR PRIMARY KEY (COUNTRY, YEAR)
+  8  );
+
+Table COUNTRY_ORDERS created.
+
+SQL> 
+SQL> /* (2) Next, the script stores in a sample database information about the total number of orders submitted per country and year. 
+SQL>       The information must be derived from the present contents of a sample database.                                                      */
+SQL> 
+SQL> INSERT INTO COUNTRY_ORDERS
+  2  SELECT SHIP_COUNTRY, EXTRACT(year FROM SHIPPED_DATE) "Year", COUNT(SHIPPED_DATE) "Total Orders"
+  3  FROM ORDERS
+  4  GROUP BY (SHIP_COUNTRY, EXTRACT(year FROM SHIPPED_DATE))
+  5  ORDER BY SHIP_COUNTRY
+  6  ;
+
+38 rows inserted.
+
+SQL> 
+SQL> /* (3) Next, this script list information about the total number of orders submitted per country and year.                                  */
+SQL> 
+SQL> SELECT *
+  2  FROM COUNTRY_ORDERS
+  3  ;
+
+COUNTRY         YEAR ORDER_COUNT
+--------------- ---- -----------
+Argentina       1997           2
+Austria         1996           6
+Austria         1997           8
+Brazil          1996           5
+Brazil          1997           7
+Canada          1996           3
+Canada          1997           5
+Denmark         1997           2
+Finland         1996           2
+Finland         1997           3
+France          1996           5
+France          1997           4
+France          1998           1
+Germany         1996           7
+Germany         1997           6
+Ireland         1996           2
+Ireland         1997           2
+Italy           1996           2
+Italy           1997           4
+Italy           1998           1
+Mexico          1996           1
+Norway          1996           1
+Poland          1996           1
+Portugal        1996           1
+Portugal        1997           2
+Spain           1996           1
+Spain           1997           1
+Sweden          1996           7
+Sweden          1997           4
+Switzerland     1996           1
+Switzerland     1997           1
+UK              1996           4
+UK              1997           2
+USA             1996          10
+USA             1997          11
+USA             1998           1
+Venezuela       1996           3
+Venezuela       1997           2
+
+38 rows selected. 
+
+SQL> 
+SQL> /* (4) Next, the script creates a statement trigger, that automatically updates information about the total number of orders submitted 
+SQL>       per country and year whenever a new order is added or whenever an old order is deleted from a sample database.                       */
+SQL> 
+SQL> CREATE OR REPLACE TRIGGER UpdateOrderTotal AFTER INSERT OR DELETE ON ORDERS
+  2  BEGIN
+  3      DELETE FROM COUNTRY_ORDERS;
+  4      INSERT INTO COUNTRY_ORDERS
+  5      SELECT SHIP_COUNTRY, EXTRACT(year FROM SHIPPED_DATE) "Year", COUNT(SHIPPED_DATE) "Total Orders"
+  6      FROM ORDERS
+  7      GROUP BY (SHIP_COUNTRY, EXTRACT(year FROM SHIPPED_DATE))
+  8      ORDER BY SHIP_COUNTRY
+  9      ;
+ 10  END;
+ 11  /
+
+Trigger UPDATEORDERTOTAL compiled
+
+SQL> 
+SQL> /* (5) Next, the script comprehensively tests the trigger. A test must include at least one insertion of a new order and at least one 
+SQL>       deletion of an old order. The script must list information about the total number of orders submitted per country and year after 
+SQL>       insertion of a new order and after deletion of an older one.                                                                         */
+SQL> 
+SQL> INSERT INTO ORDERS
+  2     (ORDER_ID, CUSTOMER_CODE, EMPLOYEE_ID, ORDER_DATE, REQUIRED_DATE, SHIPPED_DATE, SHIP_VIA, FREIGHT, SHIP_NAME, SHIP_ADDRESS, SHIP_CITY, SHIP_REGION, SHIP_POSTAL_CODE, SHIP_COUNTRY)
+  3   VALUES
+  4     (700,'SAVEA', 4, TO_DATE('02/10/1998', 'MM/DD/YYYY'), TO_DATE('03/10/1998', 'MM/DD/YYYY'), 
+  5      TO_DATE('02/28/1998', 'MM/DD/YYYY'), 'United Package', 86.53, 'Old World Delicatessen', '187 Suffolk Ln.', 
+  6      'Boise', 'ID', '83720', 'USA');
+
+1 row inserted.
+
+SQL> 
+SQL> SELECT *
+  2  FROM COUNTRY_ORDERS
+  3  ;
+
+COUNTRY         YEAR ORDER_COUNT
+--------------- ---- -----------
+Argentina       1997           2
+Austria         1996           6
+Austria         1997           8
+Brazil          1996           5
+Brazil          1997           7
+Canada          1996           3
+Canada          1997           5
+Denmark         1997           2
+Finland         1996           2
+Finland         1997           3
+France          1996           5
+France          1997           4
+France          1998           1
+Germany         1996           7
+Germany         1997           6
+Ireland         1996           2
+Ireland         1997           2
+Italy           1996           2
+Italy           1997           4
+Italy           1998           1
+Mexico          1996           1
+Norway          1996           1
+Poland          1996           1
+Portugal        1996           1
+Portugal        1997           2
+Spain           1996           1
+Spain           1997           1
+Sweden          1996           7
+Sweden          1997           4
+Switzerland     1996           1
+Switzerland     1997           1
+UK              1996           4
+UK              1997           2
+USA             1996          10
+USA             1997          11
+USA             1998           2
+Venezuela       1996           3
+Venezuela       1997           2
+
+38 rows selected. 
+
+SQL> 
+SQL> DELETE FROM ORDER_DETAIL WHERE ORDER_ID = 378;
+
+2 rows deleted.
+
+SQL> DELETE FROM ORDERS WHERE ORDER_ID = 378;
+
+1 row deleted.
+
+SQL> 
+SQL> SELECT *
+  2  FROM COUNTRY_ORDERS
+  3  ;
+
+COUNTRY         YEAR ORDER_COUNT
+--------------- ---- -----------
+Argentina       1997           2
+Austria         1996           6
+Austria         1997           8
+Brazil          1996           5
+Brazil          1997           7
+Canada          1996           3
+Canada          1997           5
+Denmark         1997           2
+Finland         1996           2
+Finland         1997           3
+France          1996           5
+France          1997           4
+France          1998           1
+Germany         1996           7
+Germany         1997           6
+Ireland         1996           2
+Ireland         1997           2
+Italy           1996           2
+Italy           1997           4
+Italy           1998           1
+Mexico          1996           1
+Norway          1996           1
+Poland          1996           1
+Portugal        1996           1
+Portugal        1997           2
+Spain           1996           1
+Spain           1997           1
+Sweden          1996           7
+Sweden          1997           3
+Switzerland     1996           1
+Switzerland     1997           1
+UK              1996           4
+UK              1997           2
+USA             1996          10
+USA             1997          11
+USA             1998           2
+Venezuela       1996           3
+Venezuela       1997           2
+
+38 rows selected. 
+
+SQL> 
+SQL> /* (6) Finally, the script removes from a data dictionary a trigger created in a step (4).                                                  */
+SQL> 
+SQL> DROP TRIGGER UpdateOrderTotal;
+
+Trigger UPDATEORDERTOTAL dropped.
+
+SQL> 
+SQL> SPOOL OFF

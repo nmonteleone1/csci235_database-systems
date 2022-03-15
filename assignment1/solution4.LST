@@ -1,0 +1,888 @@
+SQL> SET SERVEROUTPUT ON;
+SQL> SET ECHO ON;
+SQL> SET FEEDBACK ON;
+SQL> SET LINESIZE 300;
+SQL> SET PAGESIZE 400;
+SQL> 
+SQL> DECLARE
+  2      currentOrder ORDER_DETAIL.ORDER_ID%type;
+  3      totalValue ORDER_DETAIL.UNIT_PRICE%type;
+  4      itemName ORDER_DETAIL.PRODUCT_NAME%type;
+  5      CURSOR get_order IS
+  6          SELECT ORDER_ID, SUM(UNIT_PRICE * QUANTITY)
+  7          FROM ORDER_DETAIL
+  8          GROUP BY ORDER_ID;
+  9      CURSOR get_items IS
+ 10          SELECT PRODUCT_NAME
+ 11          FROM ORDER_DETAIL
+ 12          WHERE ORDER_ID = currentOrder;
+ 13  BEGIN
+ 14      --Open first cursor to find all order details
+ 15      OPEN get_order;
+ 16      LOOP
+ 17          FETCH get_order INTO currentOrder, totalValue;
+ 18              EXIT WHEN get_order%notfound;
+ 19              dbms_output.put_line('Order id: ' || currentOrder);
+ 20              dbms_output.put_line('Total value: ' || totalValue);
+ 21              dbms_output.put_line('Names of products ordered:');
+ 22  
+ 23              --Open second cursor to get all items in this order
+ 24              OPEN get_items;
+ 25              LOOP
+ 26                  FETCH get_items INTO itemName;
+ 27                      EXIT WHEN get_items%notfound;
+ 28                      dbms_output.put_line(itemName);
+ 29              END LOOP;
+ 30              CLOSE get_items;
+ 31              dbms_output.put_line('---------------------------------------------');
+ 32      END LOOP;
+ 33      CLOSE get_order;
+ 34  EXCEPTION
+ 35      WHEN OTHERS THEN
+ 36          raise_application_error(-20001,'An error was encountered - '||SQLCODE||' -ERROR- '||SQLERRM);
+ 37  END;
+ 38  /
+Order id: 277
+Total value: 1200.8
+Names of products ordered:
+Rossle Sauerkraut
+Tarte au sucre
+---------------------------------------------
+Order id: 281
+Total value: 86.5
+Names of products ordered:
+Guarana Fantastica
+Steeleye Stout
+Teatime Chocolate Biscuits
+---------------------------------------------
+Order id: 290
+Total value: 2169
+Names of products ordered:
+Chef Anton's Gumbo Mix
+Maxilaku
+Original Frankfurter grune Sosse
+Thuringer Rostbratwurst
+---------------------------------------------
+Order id: 291
+Total value: 552.8
+Names of products ordered:
+Gula Malacca
+Konbu
+Manjimup Dried Apples
+---------------------------------------------
+Order id: 313
+Total value: 182.4
+Names of products ordered:
+Inlagd Sill
+---------------------------------------------
+Order id: 318
+Total value: 201.9
+Names of products ordered:
+Jack's New England Clam Chowder
+Lakkalikoori
+---------------------------------------------
+Order id: 328
+Total value: 1168
+Names of products ordered:
+Louisiana Fiery Hot Pepper Sauce
+Raclette Courdavault
+Scottish Longbreads
+---------------------------------------------
+Order id: 348
+Total value: 748.8
+Names of products ordered:
+Alice Mutton
+Rossle Sauerkraut
+---------------------------------------------
+Order id: 359
+Total value: 931
+Names of products ordered:
+Wimmers gute Semmelknodel
+---------------------------------------------
+Order id: 371
+Total value: 2051.6
+Names of products ordered:
+Nord-Ost Matjeshering
+Pate chinois
+Sir Rodney's Scones
+---------------------------------------------
+Order id: 249
+Total value: 1863.4
+Names of products ordered:
+Manjimup Dried Apples
+Tofu
+---------------------------------------------
+Order id: 259
+Total value: 100.8
+Names of products ordered:
+Gravad lax
+Sir Rodney's Scones
+---------------------------------------------
+Order id: 268
+Total value: 1101.2
+Names of products ordered:
+Mozzarella di Giovanni
+Thuringer Rostbratwurst
+---------------------------------------------
+Order id: 270
+Total value: 1376
+Names of products ordered:
+Inlagd Sill
+Ipoh Coffee
+---------------------------------------------
+Order id: 275
+Total value: 307.2
+Names of products ordered:
+Guarana Fantastica
+Raclette Courdavault
+---------------------------------------------
+Order id: 293
+Total value: 848.7
+Names of products ordered:
+Carnarvon Tigers
+Guarana Fantastica
+Rhonbrau Klosterbier
+Vegie-spread
+---------------------------------------------
+Order id: 300
+Total value: 608
+Names of products ordered:
+Louisiana Hot Spiced Okra
+Scottish Longbreads
+---------------------------------------------
+Order id: 305
+Total value: 4157
+Names of products ordered:
+Carnarvon Tigers
+Inlagd Sill
+Thuringer Rostbratwurst
+---------------------------------------------
+Order id: 315
+Total value: 516.8
+Names of products ordered:
+Outback Lager
+Sasquatch Ale
+---------------------------------------------
+Order id: 329
+Total value: 4819.4
+Names of products ordered:
+Côte de Blaye
+Gnocchi di nonna Alice
+Nord-Ost Matjeshering
+Teatime Chocolate Biscuits
+---------------------------------------------
+Order id: 333
+Total value: 954
+Names of products ordered:
+Flotemysost
+Sir Rodney's Scones
+Tofu
+---------------------------------------------
+Order id: 338
+Total value: 934.5
+Names of products ordered:
+Alice Mutton
+Uncle Bob's Organic Dried Pears
+---------------------------------------------
+Order id: 344
+Total value: 240
+Names of products ordered:
+Longlife Tofu
+---------------------------------------------
+Order id: 350
+Total value: 565.5
+Names of products ordered:
+Guarana Fantastica
+Inlagd Sill
+Jack's New England Clam Chowder
+Teatime Chocolate Biscuits
+Tourtiere
+---------------------------------------------
+Order id: 351
+Total value: 114
+Names of products ordered:
+Filo Mix
+Gorgonzola Telino
+---------------------------------------------
+Order id: 352
+Total value: 914.4
+Names of products ordered:
+Flotemysost
+Louisiana Fiery Hot Pepper Sauce
+Teatime Chocolate Biscuits
+---------------------------------------------
+Order id: 353
+Total value: 149.4
+Names of products ordered:
+Gumbar Gummibarchen
+---------------------------------------------
+Order id: 368
+Total value: 3891
+Names of products ordered:
+Flotemysost
+Gnocchi di nonna Alice
+Gumbar Gummibarchen
+Ipoh Coffee
+Rossle Sauerkraut
+---------------------------------------------
+Order id: 250
+Total value: 1813
+Names of products ordered:
+Jack's New England Clam Chowder
+Louisiana Fiery Hot Pepper Sauce
+Manjimup Dried Apples
+---------------------------------------------
+Order id: 253
+Total value: 1444.8
+Names of products ordered:
+Gorgonzola Telino
+Inlagd Sill
+Maxilaku
+---------------------------------------------
+Order id: 255
+Total value: 2490.5
+Names of products ordered:
+Chang
+Inlagd Sill
+Pavlova
+Raclette Courdavault
+---------------------------------------------
+Order id: 261
+Total value: 448
+Names of products ordered:
+Sir Rodney's Scones
+Steeleye Stout
+---------------------------------------------
+Order id: 262
+Total value: 519.8
+Names of products ordered:
+Chef Anton's Gumbo Mix
+Gnocchi di nonna Alice
+Guarana Fantastica
+---------------------------------------------
+Order id: 264
+Total value: 724.5
+Names of products ordered:
+Chang
+Jack's New England Clam Chowder
+---------------------------------------------
+Order id: 267
+Total value: 4031
+Names of products ordered:
+Boston Crab Meat
+Lakkalikoori
+Raclette Courdavault
+---------------------------------------------
+Order id: 271
+Total value: 48
+Names of products ordered:
+Geitost
+---------------------------------------------
+Order id: 272
+Total value: 1456
+Names of products ordered:
+Gorgonzola Telino
+Mozzarella di Giovanni
+Sir Rodney's Marmalade
+---------------------------------------------
+Order id: 278
+Total value: 1488.8
+Names of products ordered:
+Gula Malacca
+Raclette Courdavault
+Rod Kaviar
+Vegie-spread
+---------------------------------------------
+Order id: 279
+Total value: 468
+Names of products ordered:
+Alice Mutton
+---------------------------------------------
+Order id: 280
+Total value: 613.2
+Names of products ordered:
+Guarana Fantastica
+Pate chinois
+Rhonbrau Klosterbier
+---------------------------------------------
+Order id: 298
+Total value: 3127
+Names of products ordered:
+Chang
+Inlagd Sill
+Raclette Courdavault
+Tarte au sucre
+---------------------------------------------
+Order id: 306
+Total value: 498.5
+Names of products ordered:
+Nord-Ost Matjeshering
+Perth Pasties
+Tourtiere
+---------------------------------------------
+Order id: 342
+Total value: 924.8
+Names of products ordered:
+Chang
+Gorgonzola Telino
+---------------------------------------------
+Order id: 343
+Total value: 838
+Names of products ordered:
+Pavlova
+Queso Manchego La Pastora
+Wimmers gute Semmelknodel
+---------------------------------------------
+Order id: 345
+Total value: 5793.1
+Names of products ordered:
+Chang
+Pavlova
+Sirop d'erable
+Thuringer Rostbratwurst
+---------------------------------------------
+Order id: 349
+Total value: 488.7
+Names of products ordered:
+Gumbar Gummibarchen
+Steeleye Stout
+---------------------------------------------
+Order id: 354
+Total value: 294
+Names of products ordered:
+Boston Crab Meat
+---------------------------------------------
+Order id: 356
+Total value: 112
+Names of products ordered:
+Filo Mix
+---------------------------------------------
+Order id: 357
+Total value: 1875
+Names of products ordered:
+Ikura
+Tarte au sucre
+---------------------------------------------
+Order id: 358
+Total value: 2339.4
+Names of products ordered:
+Pate chinois
+Tourtiere
+---------------------------------------------
+Order id: 360
+Total value: 470.4
+Names of products ordered:
+Louisiana Fiery Hot Pepper Sauce
+---------------------------------------------
+Order id: 370
+Total value: 234.8
+Names of products ordered:
+Rhonbrau Klosterbier
+Scottish Longbreads
+---------------------------------------------
+Order id: 373
+Total value: 713.3
+Names of products ordered:
+Singaporean Hokkien Fried Mee
+Teatime Chocolate Biscuits
+---------------------------------------------
+Order id: 378
+Total value: 717.6
+Names of products ordered:
+Ipoh Coffee
+Nord-Ost Matjeshering
+---------------------------------------------
+Order id: 379
+Total value: 1125.5
+Names of products ordered:
+Chang
+Gula Malacca
+Pavlova
+---------------------------------------------
+Order id: 380
+Total value: 1820.8
+Names of products ordered:
+Carnarvon Tigers
+Tunnbrod
+Wimmers gute Semmelknodel
+---------------------------------------------
+Order id: 257
+Total value: 1119.9
+Names of products ordered:
+Inlagd Sill
+Original Frankfurter grune Sosse
+Schoggi Schokolade
+---------------------------------------------
+Order id: 260
+Total value: 1746.2
+Names of products ordered:
+Jack's New England Clam Chowder
+Outback Lager
+Ravioli Angelo
+Tarte au sucre
+---------------------------------------------
+Order id: 266
+Total value: 364.8
+Names of products ordered:
+Queso Manchego La Pastora
+---------------------------------------------
+Order id: 269
+Total value: 676
+Names of products ordered:
+Geitost
+Mozzarella di Giovanni
+---------------------------------------------
+Order id: 288
+Total value: 89
+Names of products ordered:
+Scottish Longbreads
+Tourtiere
+---------------------------------------------
+Order id: 289
+Total value: 479.4
+Names of products ordered:
+Aniseed Syrup
+Wimmers gute Semmelknodel
+---------------------------------------------
+Order id: 292
+Total value: 1296
+Names of products ordered:
+Sir Rodney's Marmalade
+---------------------------------------------
+Order id: 297
+Total value: 1420
+Names of products ordered:
+Inlagd Sill
+Mozzarella di Giovanni
+---------------------------------------------
+Order id: 302
+Total value: 2708.8
+Names of products ordered:
+Alice Mutton
+Ipoh Coffee
+Rossle Sauerkraut
+---------------------------------------------
+Order id: 303
+Total value: 1242
+Names of products ordered:
+Boston Crab Meat
+Louisiana Fiery Hot Pepper Sauce
+Scottish Longbreads
+---------------------------------------------
+Order id: 316
+Total value: 2835
+Names of products ordered:
+Jack's New England Clam Chowder
+Tarte au sucre
+---------------------------------------------
+Order id: 320
+Total value: 516
+Names of products ordered:
+Flotemysost
+---------------------------------------------
+Order id: 324
+Total value: 6155.9
+Names of products ordered:
+Pavlova
+Raclette Courdavault
+Spegesild
+Steeleye Stout
+Vegie-spread
+---------------------------------------------
+Order id: 362
+Total value: 2096
+Names of products ordered:
+Gula Malacca
+Rossle Sauerkraut
+---------------------------------------------
+Order id: 366
+Total value: 656
+Names of products ordered:
+Maxilaku
+Sir Rodney's Scones
+---------------------------------------------
+Order id: 369
+Total value: 1688
+Names of products ordered:
+Mozzarella di Giovanni
+Spegesild
+Uncle Bob's Organic Dried Pears
+---------------------------------------------
+Order id: 375
+Total value: 2719
+Names of products ordered:
+Boston Crab Meat
+Guarana Fantastica
+Rogede sild
+Thuringer Rostbratwurst
+Valkoinen suklaa
+---------------------------------------------
+Order id: 383
+Total value: 230.4
+Names of products ordered:
+Flotemysost
+Geitost
+---------------------------------------------
+Order id: 251
+Total value: 670.8
+Names of products ordered:
+Gustaf's Knackebrod
+Louisiana Fiery Hot Pepper Sauce
+Ravioli Angelo
+---------------------------------------------
+Order id: 256
+Total value: 517.8
+Names of products ordered:
+Original Frankfurter grune Sosse
+Perth Pasties
+---------------------------------------------
+Order id: 295
+Total value: 121.6
+Names of products ordered:
+Gnocchi di nonna Alice
+---------------------------------------------
+Order id: 309
+Total value: 1762
+Names of products ordered:
+Chef Anton's Cajun Seasoning
+Flotemysost
+Grandma's Boysenberry Spread
+Ipoh Coffee
+Singaporean Hokkien Fried Mee
+---------------------------------------------
+Order id: 310
+Total value: 336
+Names of products ordered:
+Pavlova
+Tarte au sucre
+---------------------------------------------
+Order id: 317
+Total value: 288
+Names of products ordered:
+Chai
+---------------------------------------------
+Order id: 331
+Total value: 88.5
+Names of products ordered:
+Tourtiere
+---------------------------------------------
+Order id: 341
+Total value: 412
+Names of products ordered:
+Geitost
+Raclette Courdavault
+---------------------------------------------
+Order id: 363
+Total value: 453
+Names of products ordered:
+Chocolade
+Outback Lager
+---------------------------------------------
+Order id: 364
+Total value: 414
+Names of products ordered:
+Geitost
+Pavlova
+Spegesild
+---------------------------------------------
+Order id: 365
+Total value: 2684
+Names of products ordered:
+Flotemysost
+Inlagd Sill
+Perth Pasties
+Sirop d'erable
+---------------------------------------------
+Order id: 381
+Total value: 1328
+Names of products ordered:
+Gnocchi di nonna Alice
+Uncle Bob's Organic Dried Pears
+---------------------------------------------
+Order id: 254
+Total value: 625.2
+Names of products ordered:
+Guarana Fantastica
+Longlife Tofu
+Pate chinois
+---------------------------------------------
+Order id: 263
+Total value: 2464.8
+Names of products ordered:
+Guarana Fantastica
+Longlife Tofu
+Nord-Ost Matjeshering
+Pavlova
+---------------------------------------------
+Order id: 301
+Total value: 755
+Names of products ordered:
+Boston Crab Meat
+Gnocchi di nonna Alice
+---------------------------------------------
+Order id: 311
+Total value: 268.8
+Names of products ordered:
+Gudbrandsdalsost
+Singaporean Hokkien Fried Mee
+---------------------------------------------
+Order id: 312
+Total value: 1614.8
+Names of products ordered:
+Ipoh Coffee
+Perth Pasties
+Rhonbrau Klosterbier
+Rossle Sauerkraut
+---------------------------------------------
+Order id: 319
+Total value: 1191.2
+Names of products ordered:
+Alice Mutton
+Lakkalikoori
+Rossle Sauerkraut
+---------------------------------------------
+Order id: 321
+Total value: 144
+Names of products ordered:
+Steeleye Stout
+---------------------------------------------
+Order id: 323
+Total value: 164.4
+Names of products ordered:
+Genen Shouyu
+Grandma's Boysenberry Spread
+Inlagd Sill
+---------------------------------------------
+Order id: 325
+Total value: 1528.8
+Names of products ordered:
+Gorgonzola Telino
+Grandma's Boysenberry Spread
+Konbu
+Mozzarella di Giovanni
+Tofu
+---------------------------------------------
+Order id: 327
+Total value: 2262.5
+Names of products ordered:
+Chang
+Escargots de Bourgogne
+Nord-Ost Matjeshering
+Queso Cabrales
+---------------------------------------------
+Order id: 336
+Total value: 316.8
+Names of products ordered:
+Chef Anton's Cajun Seasoning
+---------------------------------------------
+Order id: 339
+Total value: 3463.2
+Names of products ordered:
+Alice Mutton
+Chef Anton's Cajun Seasoning
+Tarte au sucre
+---------------------------------------------
+Order id: 340
+Total value: 2564.4
+Names of products ordered:
+Carnarvon Tigers
+Ipoh Coffee
+Jack's New England Clam Chowder
+---------------------------------------------
+Order id: 347
+Total value: 100.8
+Names of products ordered:
+Queso Cabrales
+---------------------------------------------
+Order id: 361
+Total value: 572
+Names of products ordered:
+Original Frankfurter grune Sosse
+---------------------------------------------
+Order id: 382
+Total value: 1051.2
+Names of products ordered:
+Guarana Fantastica
+Manjimup Dried Apples
+---------------------------------------------
+Order id: 248
+Total value: 440
+Names of products ordered:
+Mozzarella di Giovanni
+Queso Cabrales
+Singaporean Hokkien Fried Mee
+---------------------------------------------
+Order id: 258
+Total value: 2018.6
+Names of products ordered:
+Chang
+Chef Anton's Gumbo Mix
+Mascarpone Fabioli
+---------------------------------------------
+Order id: 273
+Total value: 2142.4
+Names of products ordered:
+Boston Crab Meat
+Geitost
+Gorgonzola Telino
+Ikura
+Lakkalikoori
+---------------------------------------------
+Order id: 314
+Total value: 2327
+Names of products ordered:
+Escargots de Bourgogne
+Mascarpone Fabioli
+Tarte au sucre
+---------------------------------------------
+Order id: 322
+Total value: 84
+Names of products ordered:
+Filo Mix
+---------------------------------------------
+Order id: 326
+Total value: 982
+Names of products ordered:
+Chef Anton's Cajun Seasoning
+Ravioli Angelo
+Rhonbrau Klosterbier
+---------------------------------------------
+Order id: 335
+Total value: 2545.2
+Names of products ordered:
+Chang
+Gorgonzola Telino
+Manjimup Dried Apples
+Mascarpone Fabioli
+---------------------------------------------
+Order id: 367
+Total value: 1584
+Names of products ordered:
+Raclette Courdavault
+---------------------------------------------
+Order id: 372
+Total value: 156
+Names of products ordered:
+Konbu
+Tunnbrod
+---------------------------------------------
+Order id: 374
+Total value: 1848
+Names of products ordered:
+Camembert Pierrot
+Chef Anton's Cajun Seasoning
+Gnocchi di nonna Alice
+Ipoh Coffee
+---------------------------------------------
+Order id: 252
+Total value: 3730
+Names of products ordered:
+Camembert Pierrot
+Geitost
+Sir Rodney's Marmalade
+---------------------------------------------
+Order id: 265
+Total value: 1176
+Names of products ordered:
+Alice Mutton
+Outback Lager
+---------------------------------------------
+Order id: 274
+Total value: 538.6
+Names of products ordered:
+Flotemysost
+Mozzarella di Giovanni
+---------------------------------------------
+Order id: 276
+Total value: 420
+Names of products ordered:
+Ikura
+Konbu
+---------------------------------------------
+Order id: 294
+Total value: 1887.6
+Names of products ordered:
+Alice Mutton
+Camembert Pierrot
+Chai
+Ipoh Coffee
+Rhonbrau Klosterbier
+---------------------------------------------
+Order id: 296
+Total value: 1050.6
+Names of products ordered:
+Gudbrandsdalsost
+Pavlova
+Queso Cabrales
+---------------------------------------------
+Order id: 299
+Total value: 349.5
+Names of products ordered:
+Outback Lager
+Teatime Chocolate Biscuits
+---------------------------------------------
+Order id: 304
+Total value: 954.4
+Names of products ordered:
+Flotemysost
+Maxilaku
+Raclette Courdavault
+---------------------------------------------
+Order id: 307
+Total value: 424
+Names of products ordered:
+Scottish Longbreads
+Tarte au sucre
+---------------------------------------------
+Order id: 308
+Total value: 88.8
+Names of products ordered:
+Gudbrandsdalsost
+Outback Lager
+---------------------------------------------
+Order id: 330
+Total value: 1940
+Names of products ordered:
+Gumbar Gummibarchen
+Mozzarella di Giovanni
+---------------------------------------------
+Order id: 332
+Total value: 2233.6
+Names of products ordered:
+Carnarvon Tigers
+Singaporean Hokkien Fried Mee
+Zaanse koeken
+---------------------------------------------
+Order id: 334
+Total value: 144.8
+Names of products ordered:
+Filo Mix
+Scottish Longbreads
+---------------------------------------------
+Order id: 337
+Total value: 2467
+Names of products ordered:
+Gravad lax
+Gumbar Gummibarchen
+Inlagd Sill
+Mozzarella di Giovanni
+Tunnbrod
+---------------------------------------------
+Order id: 346
+Total value: 3547
+Names of products ordered:
+Louisiana Hot Spiced Okra
+Queso Cabrales
+Schoggi Schokolade
+Tourtiere
+---------------------------------------------
+Order id: 355
+Total value: 347.2
+Names of products ordered:
+Gnocchi di nonna Alice
+---------------------------------------------
+
+
+PL/SQL procedure successfully completed.
+
+SQL> SPOOL OFF;

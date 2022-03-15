@@ -1,0 +1,45 @@
+SQL> 
+SQL> set echo on
+SQL> set feedback on
+SQL> set linesize 100
+SQL> set pagesize 200
+SQL> 
+SQL> SELECT USER_INDEXES.TABLE_NAME, COUNT(*) AS INDEXES
+  2  FROM USER_INDEXES
+  3  INNER JOIN USER_TABLES ON USER_TABLES.TABLE_NAME = USER_INDEXES.TABLE_NAME
+  4  GROUP BY USER_INDEXES.TABLE_NAME
+  5  ORDER BY INDEXES DESC;
+
+TABLE_NAME
+----------------------------------------------------------------------------------------------------
+   INDEXES
+----------
+SHIPPER                                                                                             
+         2
+
+CATEGORY                                                                                            
+         1
+
+ORDERS                                                                                              
+         1
+
+PRODUCT                                                                                             
+         1
+
+ORDER_DETAIL                                                                                        
+         1
+
+CUSTOMER                                                                                            
+         1
+
+SUPPLIER                                                                                            
+         1
+
+EMPLOYEE                                                                                            
+         1
+
+
+8 rows selected. 
+
+SQL> 
+SQL> spool off

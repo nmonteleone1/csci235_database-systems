@@ -1,0 +1,180 @@
+SQL> SET ECHO ON
+SQL> SET FEEDBACK ON
+SQL> SET LINESIZE 200
+SQL> SET PAGESIZE 400
+SQL> 
+SQL> /* (1)	Create a database link from the "host server" to the "remote server".                                */
+SQL> 
+SQL> CREATE DATABASE LINK "DB.DATA-PC07" CONNECT TO nm824 IDENTIFIED BY zeb1b4 USING 'data-pc07.adeis.uow.edu.au:1521/db';
+
+Database link "DB.DATA-PC07" created.
+
+SQL> 
+SQL> /* (2)	Create a synonym names of the empty relational tables located at the "remote server".                */
+SQL> 
+SQL> CREATE SYNONYM remoteCAT FOR CATEGORY@"DB.DATA-PC07";
+
+Synonym REMOTECAT created.
+
+SQL> CREATE SYNONYM remotePROD FOR PRODUCT@"DB.DATA-PC07";
+
+Synonym REMOTEPROD created.
+
+SQL> CREATE SYNONYM remoteSUP FOR SUPPLIER@"DB.DATA-PC07";
+
+Synonym REMOTESUP created.
+
+SQL> 
+SQL> /* (3)	Use the database links to move information about all categories of products, all suppliers located 
+SQL>        in USA or in UK or in Australia and all products supplied by the suppliers located in USA or in UK 
+SQL>        or in Australia from the "host server" to the "remote server".                                       
+SQL>
+SQL>        "Move" means, that all information about suppliers and products copied from the "host server" to 
+SQL>        the "remote server" must be later on removed from the "host server".                                 */
+SQL> 
+SQL> INSERT INTO remoteCAT
+  2      SELECT *
+  3      FROM CATEGORY
+  4  ;
+
+8 rows inserted.
+
+SQL> 
+SQL> INSERT INTO remoteSUP
+  2      SELECT *
+  3      FROM SUPPLIER
+  4      WHERE COUNTRY = 'USA' OR COUNTRY = 'UK' OR COUNTRY = 'Australia'
+  5  ;
+
+8 rows inserted.
+
+SQL> 
+SQL> INSERT INTO remotePROD
+  2      SELECT *
+  3      FROM PRODUCT
+  4      WHERE SUPPLIER_NAME IN (
+  5          SELECT COMPANY_NAME
+  6          FROM remoteSUP
+  7          )
+  8  ;
+
+28 rows inserted.
+
+SQL> 
+SQL> DELETE FROM PRODUCT
+  2  WHERE SUPPLIER_NAME IN (
+  3          SELECT COMPANY_NAME
+  4          FROM remoteSUP
+  5          )
+  6  ;
+
+28 rows deleted.
+
+SQL> 
+SQL> DELETE FROM SUPPLIER
+  2  WHERE  COUNTRY = 'USA' 
+  3     OR  COUNTRY = 'UK' 
+  4     OR  COUNTRY = 'Australia'
+  5  ;
+
+8 rows deleted.
+
+SQL> 
+SQL> /* (4)	Implement a query that finds the total number of products supplied by each supplier. If a supplier 
+SQL>        supplies no products then list a name of a supplier with a number zero.                              
+SQL>        Order the results in the ascending order of the total number of supplied products.                   */
+SQL> 
+SQL> SELECT SUPPLIER_NAME, COUNT(SUPPLIER_NAME)-1
+  2  FROM (
+  3      SELECT SUPPLIER_NAME, PRODUCT_NAME
+  4      FROM PRODUCT 
+  5  
+  6      UNION 
+  7  
+  8      SELECT COMPANY_NAME AS SUPPLIER_NAME, ADDRESS
+  9      FROM SUPPLIER
+ 10  
+ 11      UNION
+ 12  
+ 13      SELECT SUPPLIER_NAME, PRODUCT_NAME
+ 14      FROM remotePROD
+ 15  
+ 16      UNION
+ 17  
+ 18      SELECT COMPANY_NAME AS SUPPLIER_NAME, ADDRESS
+ 19      FROM remoteSUP)
+ 20  GROUP BY SUPPLIER_NAME
+ 21  ORDER BY SUPPLIER_NAME
+ 22  ;
+
+SUPPLIER_NAME                            COUNT(SUPPLIER_NAME)-1
+---------------------------------------- ----------------------
+Aux joyeux ecclesiastiques                                    1
+Bigfoot Breweries                                             3
+Cooperativa de Quesos 'Las Cabras'                            2
+Escargots Nouveaux                                            1
+Exotic Liquids                                                3
+Forets d'erables                                              2
+Formaggi Fortini s.r.l.                                       3
+G'day, Mate                                                   3
+Gai paturage                                                  2
+Grandma Kelly's Homestead                                     3
+Heli Susswaren GmbH And Co. KG                                3
+Karkki Oy                                                     3
+Leka Trading                                                  3
+Lyngbysild                                                    2
+Ma Maison                                                     2
+Mayumi's                                                      3
+New England Seafood Cannery                                   2
+New Orleans Cajun Delights                                    4
+Nord-Ost-Fisch Handelsgesellschaft mbH                        1
+Norske Meierier                                               3
+PB Knackebrod AB                                              2
+Pasta Buttini s.r.l.                                          2
+Pavlova, Ltd.                                                 6
+Plutzer Lebensmittelgrossmarkte AG                            5
+Refrescos Americanas LTDA                                     1
+Specialty Biscuits, Ltd.                                      4
+Svensk Sjofoda AB                                             3
+Tokyo Traders                                                 3
+Zaanse Snoepfabriek                                           2
+
+29 rows selected. 
+
+SQL> 
+SQL> /* (5)	List the names of relational tables located at the "remote server. To do so you have to access 
+SQL>        a data dictionary view USER_TABLES at the "remote server".                                           */
+SQL> 
+SQL> SELECT TABLE_NAME
+  2  FROM USER_TABLES@"DB.DATA-PC07";
+
+TABLE_NAME                                                                                                                      
+--------------------------------------------------------------------------------------------------------------------------------
+CATEGORY
+SUPPLIER
+PRODUCT
+
+3 rows selected. 
+
+SQL> 
+SQL> /* (6)	Drop the synonyms and a database link.                                                               */
+SQL> 
+SQL> DROP SYNONYM remoteCAT;
+
+Synonym REMOTECAT dropped.
+
+SQL> DROP SYNONYM remotePROD;
+
+Synonym REMOTEPROD dropped.
+
+SQL> DROP SYNONYM remoteSUP;
+
+Synonym REMOTESUP dropped.
+
+SQL> 
+SQL> DROP DATABASE LINK "DB.DATA-PC07";
+
+Database link "DB.DATA-PC07" dropped.
+
+SQL> 
+SQL> SPOOL OFF

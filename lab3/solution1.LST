@@ -1,0 +1,169 @@
+SQL> SET SERVEROUTPUT ON
+SQL> SET ECHO ON
+SQL> SET FEEDBACK ON
+SQL> SET LINESIZE 200
+SQL> SET PAGESIZE 400
+SQL> 
+SQL> /* (1) First, the script modifies the structures of a sample database such it is possible to store information about 
+SQL>       the manufacturers of the products listed in the database. A manufacturer is described by a unique name, country, 
+SQL>       and city where it is located. Assume, that a manufacturer can manufacture many products and a product can be 
+SQL>       manufacturer by many manufacturers.                                                                                          */
+SQL> 
+SQL> CREATE TABLE MANUFACTURER
+  2  (
+  3      MANUFACTURER_NAME   VARCHAR(40)     NOT NULL,
+  4      COUNTRY             VARCHAR(15)     NOT NULL,
+  5      CITY                VARCHAR(15)     NOT NULL,
+  6      CONSTRAINT PK_MANUFACTURER PRIMARY KEY (MANUFACTURER_NAME)
+  7  );
+
+Table MANUFACTURER created.
+
+SQL> 
+SQL> CREATE TABLE MANUFACTURING_DETAIL
+  2  (
+  3      MANUFACTURER_NAME        VARCHAR(40)     NOT NULL,
+  4      PRODUCT_NAME             VARCHAR(40)     NOT NULL,
+  5      CONSTRAINT PK_DETAIL PRIMARY KEY (MANUFACTURER_NAME, PRODUCT_NAME),
+  6      CONSTRAINT FK_MANUFACTURER FOREIGN KEY (MANUFACTURER_NAME) REFERENCES MANUFACTURER(MANUFACTURER_NAME),
+  7      CONSTRAINT FK_PRODUCT FOREIGN KEY (PRODUCT_NAME) REFERENCES PRODUCT(PRODUCT_NAME)
+  8  );
+
+Table MANUFACTURING_DETAIL created.
+
+SQL> 
+SQL> /* (2) Next, the script inserts into a database information about 3 manufacturers and make the insertions permanent.                */
+SQL> 
+SQL> INSERT INTO MANUFACTURER(MANUFACTURER_NAME, COUNTRY, CITY)
+  2  VALUES('Nestle', 'Switzerland', 'Vevey');
+
+1 row inserted.
+
+SQL> 
+SQL> INSERT INTO MANUFACTURER(MANUFACTURER_NAME, COUNTRY, CITY)
+  2  VALUES('Volkswagen Group', 'Germany', 'Wolfsburg');
+
+1 row inserted.
+
+SQL> 
+SQL> INSERT INTO MANUFACTURER(MANUFACTURER_NAME, COUNTRY, CITY)
+  2  VALUES('Samsung Electronics', 'South Korea', 'Suwon-si');
+
+1 row inserted.
+
+SQL> 
+SQL> COMMIT;
+
+Commit complete.
+
+SQL> 
+SQL> /* (3) Next, the script stores in a data dictionary PL/SQL procedure that links the manufacturers with the products.      
+SQL>       The procedure must enforce the following consistency constraint.                                                    
+SQL>
+SQL>       No more than two manufacturers are allowed to manufacture the same product.
+SQL>
+SQL>       The procedure must display an error when the consistency constraint is violated and it must not insert a link 
+SQL>       between a manufacturer and a product. Otherwise, the procedure must insert a link into a database and make 
+SQL>       the link permanent.
+SQL>
+SQL>       Remember to put / in the next line after CREATE OR REPLACE PROCEDURE statement and a line show errors in the next line.      */
+SQL> 
+SQL> CREATE OR REPLACE TRIGGER CheckManufacturing
+  2  BEFORE INSERT 
+  3      ON MANUFACTURING_DETAIL FOR EACH ROW
+  4  DECLARE
+  5      product_manufacturers MANUFACTURING_DETAIL.MANUFACTURER_NAME%type;
+  6  BEGIN
+  7      SELECT COUNT(*)
+  8      INTO product_manufacturers
+  9      FROM MANUFACTURING_DETAIL
+ 10      WHERE PRODUCT_NAME = :NEW.PRODUCT_NAME;
+ 11  
+ 12      IF product_manufacturers >= 2 THEN
+ 13          RAISE_APPLICATION_ERROR(-20002, 'No more than two manufacturers are allowed to manufacture ' || :NEW.PRODUCT_NAME);
+ 14      END IF;
+ 15  END;
+ 16  /
+
+Trigger CHECKMANUFACTURING compiled
+
+SQL> 
+SQL> /* (4) Next, the script performs the comprehensive testing of the stored procedure implemented in the previous step. 
+SQL>       The testing must refuse at least one time to link a manufacturer with a product due to the violated consistency
+SQL>        constraint.                                .                                                                               */
+SQL> 
+SQL> INSERT INTO MANUFACTURING_DETAIL(MANUFACTURER_NAME, PRODUCT_NAME)
+  2  VALUES('Nestle', 'Chai');
+
+1 row inserted.
+
+SQL> 
+SQL> INSERT INTO MANUFACTURING_DETAIL(MANUFACTURER_NAME, PRODUCT_NAME)
+  2  VALUES('Volkswagen Group', 'Chai');
+
+1 row inserted.
+
+SQL> 
+SQL> INSERT INTO MANUFACTURING_DETAIL(MANUFACTURER_NAME, PRODUCT_NAME)
+  2  VALUES('Samsung Electronics', 'Northwoods Cranberry Sauce');
+
+1 row inserted.
+
+SQL> 
+SQL> INSERT INTO MANUFACTURING_DETAIL(MANUFACTURER_NAME, PRODUCT_NAME)
+  2  VALUES('Nestle', 'Chang');
+
+1 row inserted.
+
+SQL> 
+SQL> INSERT INTO MANUFACTURING_DETAIL(MANUFACTURER_NAME, PRODUCT_NAME)
+  2  VALUES('Nestle', 'Aniseed Syrup');
+
+1 row inserted.
+
+SQL> 
+SQL> INSERT INTO MANUFACTURING_DETAIL(MANUFACTURER_NAME, PRODUCT_NAME)
+  2  VALUES('Volkswagen Group', 'Aniseed Syrup');
+
+1 row inserted.
+
+SQL> 
+SQL> INSERT INTO MANUFACTURING_DETAIL(MANUFACTURER_NAME, PRODUCT_NAME)
+  2  VALUES('Samsung Electronics', 'Chang');
+
+1 row inserted.
+
+SQL> 
+SQL> INSERT INTO MANUFACTURING_DETAIL(MANUFACTURER_NAME, PRODUCT_NAME)
+  2  VALUES('Samsung Electronics', 'Chai');
+
+Error starting at line : 96 in command -
+INSERT INTO MANUFACTURING_DETAIL(MANUFACTURER_NAME, PRODUCT_NAME)
+VALUES('Samsung Electronics', 'Chai')
+Error report -
+ORA-20002: No more than two manufacturers are allowed to manufacture Chai
+ORA-06512: at "NM824.CHECKMANUFACTURING", line 10
+ORA-04088: error during execution of trigger 'NM824.CHECKMANUFACTURING'
+
+SQL> 
+SQL> /* (5) Finally, the script lists all information about the manufacturers and the names of product manufactured by each 
+SQL>       manufacturer.                                                                                                               */
+SQL> 
+SQL> SELECT MANUFACTURER.MANUFACTURER_NAME, COUNTRY, CITY, PRODUCT_NAME
+  2  FROM MANUFACTURER
+  3  LEFT JOIN MANUFACTURING_DETAIL ON MANUFACTURER.MANUFACTURER_NAME = MANUFACTURING_DETAIL.MANUFACTURER_NAME;
+
+MANUFACTURER_NAME                        COUNTRY         CITY            PRODUCT_NAME                            
+---------------------------------------- --------------- --------------- ----------------------------------------
+Nestle                                   Switzerland     Vevey           Aniseed Syrup                           
+Nestle                                   Switzerland     Vevey           Chai                                    
+Nestle                                   Switzerland     Vevey           Chang                                   
+Samsung Electronics                      South Korea     Suwon-si        Chang                                   
+Samsung Electronics                      South Korea     Suwon-si        Northwoods Cranberry Sauce              
+Volkswagen Group                         Germany         Wolfsburg       Aniseed Syrup                           
+Volkswagen Group                         Germany         Wolfsburg       Chai                                    
+
+7 rows selected. 
+
+SQL> 
+SQL> SPOOL OFF

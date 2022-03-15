@@ -1,0 +1,161 @@
+csci235@csci235-VirtualBox:~/Desktop/CSCI235/assignment3$ mongo -port 4000
+MongoDB shell version v4.2.2
+connecting to: mongodb://127.0.0.1:4000/?compressors=disabled&gssapiServiceName=mongodb
+Implicit session: session { "id" : UUID("3ba7b6ab-67fb-4fcc-88c5-d75398788295") }
+MongoDB server version: 4.2.2
+Server has startup warnings: 
+2021-10-29T14:07:11.991+1100 I  STORAGE  [initandlisten] 
+2021-10-29T14:07:11.992+1100 I  STORAGE  [initandlisten] ** WARNING: Using the XFS filesystem is strongly recommended with the WiredTiger storage engine
+2021-10-29T14:07:11.992+1100 I  STORAGE  [initandlisten] **          See http://dochub.mongodb.org/core/prodnotes-filesystem
+2021-10-29T14:07:12.858+1100 I  CONTROL  [initandlisten] 
+2021-10-29T14:07:12.858+1100 I  CONTROL  [initandlisten] ** WARNING: Access control is not enabled for the database.
+2021-10-29T14:07:12.858+1100 I  CONTROL  [initandlisten] **          Read and write access to data and configuration is unrestricted.
+2021-10-29T14:07:12.858+1100 I  CONTROL  [initandlisten] 
+2021-10-29T14:07:12.858+1100 I  CONTROL  [initandlisten] ** WARNING: This server is bound to localhost.
+2021-10-29T14:07:12.858+1100 I  CONTROL  [initandlisten] **          Remote systems will be unable to connect to this server. 
+2021-10-29T14:07:12.858+1100 I  CONTROL  [initandlisten] **          Start the server with --bind_ip <address> to specify which IP 
+2021-10-29T14:07:12.858+1100 I  CONTROL  [initandlisten] **          addresses it should serve responses from, or with --bind_ip_all to
+2021-10-29T14:07:12.858+1100 I  CONTROL  [initandlisten] **          bind to all interfaces. If this behavior is desired, start the
+2021-10-29T14:07:12.858+1100 I  CONTROL  [initandlisten] **          server with --bind_ip 127.0.0.1 to disable this warning.
+2021-10-29T14:07:12.858+1100 I  CONTROL  [initandlisten] 
+---
+Enable MongoDB's free cloud-based monitoring service, which will then receive and display
+metrics about your deployment (disk utilization, CPU, operation statistics, etc).
+
+The monitoring data will be available on a MongoDB website with a unique URL accessible to you
+and anyone you share the URL with. MongoDB may use this information to make product
+improvements and to suggest MongoDB products and deployment options to you.
+
+To enable free monitoring, run the following command: db.enableFreeMonitoring()
+To permanently disable this reminder, run the following command: db.disableFreeMonitoring()
+---
+
+> /* (1)  Find the suppliers who supply the products, that have the names Geitost or Boston Crab Meat. Include into the results company names, product names and unit prices. Save the results into a collection geitost that consists of the documents like: {"company":name-of-company,"product": name-of-product,"price":unit-price}.  */;
+> 
+> db.geitost.insert(db.orders.find({$or:[{"SUPPLIER.supplies.PRODUCT.product name":"Geitost"},{"SUPPLIER.supplies.PRODUCT.product name":"Boston Crab Meat"}]},{_id:0,"SUPPLIER.company name":1,"SUPPLIER.supplies.PRODUCT.product name":1,"SUPPLIER.supplies.PRODUCT.unit price":1}).toArray());
+BulkWriteResult({
+	"writeErrors" : [ ],
+	"writeConcernErrors" : [ ],
+	"nInserted" : 2,
+	"nUpserted" : 0,
+	"nMatched" : 0,
+	"nModified" : 0,
+	"nRemoved" : 0,
+	"upserted" : [ ]
+})
+> 
+> 
+> /* Display in a pretty format without document identifiers all documents in a collection geitost. */
+... 
+... db.geitost.find().pretty();
+{
+	"_id" : ObjectId("617b83303c735bc8c840f0d4"),
+	"SUPPLIER" : {
+		"company name" : "New England Seafood Cannery",
+		"supplies" : [
+			{
+				"PRODUCT" : {
+					"product name" : "Boston Crab Meat",
+					"unit price" : 18.4
+				}
+			},
+			{
+				"PRODUCT" : {
+					"product name" : "Jack's New England Clam Chowder",
+					"unit price" : 9.65
+				}
+			}
+		]
+	}
+}
+{
+	"_id" : ObjectId("617b83303c735bc8c840f0d5"),
+	"SUPPLIER" : {
+		"company name" : "Norske Meierier",
+		"supplies" : [
+			{
+				"PRODUCT" : {
+					"product name" : "Geitost",
+					"unit price" : 2.5
+				}
+			},
+			{
+				"PRODUCT" : {
+					"product name" : "Gudbrandsdalsost",
+					"unit price" : 36
+				}
+			},
+			{
+				"PRODUCT" : {
+					"product name" : "Flotemysost",
+					"unit price" : 21.5
+				}
+			}
+		]
+	}
+}
+{
+	"_id" : ObjectId("617b8b703f5cc3e21c346ecc"),
+	"SUPPLIER" : {
+		"company name" : "New England Seafood Cannery",
+		"supplies" : [
+			{
+				"PRODUCT" : {
+					"product name" : "Boston Crab Meat",
+					"unit price" : 18.4
+				}
+			},
+			{
+				"PRODUCT" : {
+					"product name" : "Jack's New England Clam Chowder",
+					"unit price" : 9.65
+				}
+			}
+		]
+	}
+}
+{
+	"_id" : ObjectId("617b8b703f5cc3e21c346ecd"),
+	"SUPPLIER" : {
+		"company name" : "Norske Meierier",
+		"supplies" : [
+			{
+				"PRODUCT" : {
+					"product name" : "Geitost",
+					"unit price" : 2.5
+				}
+			},
+			{
+				"PRODUCT" : {
+					"product name" : "Gudbrandsdalsost",
+					"unit price" : 36
+				}
+			},
+			{
+				"PRODUCT" : {
+					"product name" : "Flotemysost",
+					"unit price" : 21.5
+				}
+			}
+		]
+	}
+}
+>  
+> /* (2)  Find the total number of products supplied by each supplier located in USA. List the results in a format: {"total products supplied":integer-value,"company":company-name}. */;
+> 
+> db.orders.aggregate([{$match:{"SUPPLIER.country":"USA"}}, 
+... {$unwind:"$SUPPLIER.supplies"},
+... {$project:{"company":"$SUPPLIER.company name",
+...    "product":"$SUPPLIER.supplies.PRODUCT.product name",
+...    "_id":0}},
+... {$group:{"total products supplied":{$sum:1},"_id":"$company"}}]);
+{ "_id" : "Bigfoot Breweries", "total products supplied" : 3 }
+{ "_id" : "New Orleans Cajun Delights", "total products supplied" : 4 }
+{ "_id" : "Grandma Kelly's Homestead", "total products supplied" : 3 }
+{ "_id" : "New England Seafood Cannery", "total products supplied" : 2 }
+> 
+> /* (3)  Find 5 the most expensive products supplied. List the results in a format: {"product": product-name,"price":unit-price}. */
+... 
+... 
+> 
+

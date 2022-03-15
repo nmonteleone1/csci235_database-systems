@@ -1,0 +1,24 @@
+SQL> 
+SQL> set echo on
+SQL> set feedback on
+SQL> set linesize 150
+SQL> set pagesize 300
+SQL> 
+SQL> SELECT (SELECT COUNT(*) FROM ORDER_DETAIL ) ORDER_DETAIL,
+  2         (SELECT COUNT(*) FROM ORDERS ) ORDERS,
+  3         (SELECT COUNT(*) FROM PRODUCT ) PRODUCT,
+  4         (SELECT COUNT(*) FROM SUPPLIER ) SUPPLIER,
+  5         (SELECT COUNT(*) FROM CATEGORY ) CATEGORY,
+  6         (SELECT COUNT(*) FROM CUSTOMER ) CUSTOMER,
+  7         (SELECT COUNT(*) FROM EMPLOYEE ) EMPLOYEE,
+  8         (SELECT COUNT(*) FROM SHIPPER ) SHIPPER
+  9  FROM DUAL;
+
+   ORDER_DETAIL    ORDERS    PRODUCT    SUPPLIER    CATEGORY    CUSTOMER    EMPLOYEE    SHIPPER 
+_______________ _________ __________ ___________ ___________ ___________ ___________ __________ 
+            327       131         77          29           8          91           9          3 
+
+1 row selected. 
+
+SQL> 
+SQL> spool off

@@ -1,0 +1,101 @@
+SQL> SET SERVEROUTPUT ON
+SQL> SET ECHO ON
+SQL> SET FEEDBACK ON
+SQL> SET LINESIZE 100
+SQL> SET PAGESIZE 400
+SQL> 
+SQL> /* (1) First, store in a data dictionary PL/SQL function, that returns a string that consists of the names of 
+SQL>       products purchased by a customer with a given customer code.
+SQL>
+SQL>       Make a customer code a formal parameter of the function. A name of a function is up to you.  A string 
+SQL>       returned by the function must consists of the names of products separated with a comma (,). 
+SQL>
+SQL>       If a customer purchased no products then the function must return an empty string.                         */
+SQL> 
+SQL> CREATE OR REPLACE FUNCTION listProducts( currentCustomerCode IN VARCHAR )
+  2  RETURN VARCHAR IS
+  3      product_list VARCHAR(2000) := '';
+  4  
+  5      currentOrder ORDERS.ORDER_ID%type;
+  6      itemName ORDER_DETAIL.PRODUCT_NAME%type;
+  7      itemCounter NUMBER := 0;
+  8  
+  9      CURSOR customer_orders IS
+ 10          SELECT ORDER_ID
+ 11          FROM ORDERS
+ 12          WHERE CUSTOMER_CODE = currentCustomerCode;
+ 13  
+ 14      CURSOR get_product IS
+ 15          SELECT PRODUCT_NAME
+ 16          FROM ORDER_DETAIL
+ 17          WHERE ORDER_ID = currentOrder;
+ 18  
+ 19  BEGIN    
+ 20      OPEN customer_orders;
+ 21      LOOP
+ 22          FETCH customer_orders INTO currentOrder;
+ 23              EXIT WHEN customer_orders%notfound;
+ 24  
+ 25              OPEN get_product;
+ 26              LOOP
+ 27                  FETCH get_product INTO itemName;
+ 28                      EXIT WHEN get_product%notfound;
+ 29                      IF itemCounter = 0 THEN
+ 30                          product_list := itemName;
+ 31                          itemCounter := itemCounter + 1;
+ 32                      ELSE
+ 33                          product_list := product_list || ',' || itemName;
+ 34                          itemCounter := itemCounter + 1;
+ 35                      END IF;
+ 36              END LOOP;
+ 37              CLOSE get_product;
+ 38  
+ 39      END LOOP;
+ 40      CLOSE customer_orders;    
+ 41  
+ 42      RETURN product_list;
+ 43  END;
+ 44  /
+
+Function LISTPRODUCTS compiled
+
+SQL> 
+SQL> /* (2) To test your function implement SELECT statement that lists codes of the customers together with the names 
+SQL>       of product purchased by the customers. List the customers who purchased only 3 products. A sample 
+SQL>       output may look like below.
+SQL>
+SQL>       Code  Products                                                                                      
+SQL>       ----------------------------------------------------------------------------------------------------
+SQL>       VICTE Boston Crab Meat,Louisiana Fiery Hot Pepper Sauce,Scottish Longbreads                         
+SQL>       QUEDE Steeleye Stout,Chocolade,Outback Lager                                                        
+SQL>       DRACD Flotemysost,Sir Rodney's Scones,Tofu                                                          
+SQL>             ...		   ...	                 ...                                                                       */
+SQL> 
+SQL> SELECT *
+  2  FROM (
+  3      WITH CUSTOMERS AS (
+  4          SELECT CUSTOMER_CODE
+  5          FROM ORDERS
+  6          GROUP BY CUSTOMER_CODE),
+  7  
+  8          PRODUCTS AS (
+  9          SELECT listProducts(CUSTOMER_CODE)
+ 10          FROM CUSTOMERS)
+ 11  
+ 12          SELECT CUSTOMER_CODE AS Code, listProducts(CUSTOMER_CODE) AS Product
+ 13          FROM CUSTOMERS
+ 14  )
+ 15  WHERE (LENGTH(Product) - LENGTH(REPLACE(Product, ',', ''))) = 2;
+
+CODE  PRODUCT                                                                                       
+----- ----------------------------------------------------------------------------------------------
+VICTE Boston Crab Meat,Louisiana Fiery Hot Pepper Sauce,Scottish Longbreads                         
+QUEDE Steeleye Stout,Chocolade,Outback Lager                                                        
+DRACD Flotemysost,Sir Rodney's Scones,Tofu                                                          
+FRANS Geitost,Pavlova,Spegesild                                                                     
+CONSH Chang,Gula Malacca,Pavlova                                                                    
+
+5 rows selected. 
+
+SQL> 
+SQL> SPOOL OFF
